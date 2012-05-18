@@ -158,7 +158,9 @@ case $MODULE in
          MODULESACTIVE="$YMODULESALL $LMODULESALL"
        else
          # ALL for the other commands means: all local repos
-         MODULESACTIVE=`ls $Y2MBASE/`
+         MODULESACTIVE=`ls $Y2MBASE/ | sed -e "s/^/yast-/"`
+         #FIXME: all names are mapped to yast-
+         #TODO:  use the dynamically fetched repo lists to automatically map them correctly
        fi
        ;;
   FAV) MODULESACTIVE=$Y2MFAVORITES
