@@ -152,7 +152,7 @@ shift
 MODULESACTIVE=
 case $MODULE in
   ALL)
-       if [ $CMD = 'clone' ]
+       if [ $CMD = 'cl' ]
        then
          # ALL for cloning means: all remote repos
          MODULESACTIVE="$YMODULESALL $LMODULESALL"
