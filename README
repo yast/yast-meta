@@ -15,8 +15,8 @@ Note: There is no need to use this tool.
 Installation:
 
  cd $CHECKOUTDIR
- git clone git@github.com:yast/yast-meta
- cd yast-meta
+ git clone git@github.com:yast/yast-meta meta
+ cd meta
  ln -s `pwd`/y2m ~/bin/
 
 Usage:
