@@ -195,7 +195,12 @@ do
   fi
 
   case $CMD in
-    cl) # pass directory name to clone command to maintain the original svn directory structure
+    cl) if [ -d $MODDIRNAME ]
+        then
+          echo "Repo already cloned: $MODDIRNAME"
+          continue
+        fi
+        # pass directory name to clone command to maintain the original svn directory structure
         git clone ${GITHUBBASEURL}:${ORG}/${M} $MODDIRNAME
     ;;
     up) pushd $MODDIRNAME >/dev/null
