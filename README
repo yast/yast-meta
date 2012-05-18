@@ -28,7 +28,7 @@ commands
     co|br <name> : run git checkout to switch to branch <name> for <modules>
 modules
     'ALL' : applies to all current known yast modules
-    'FAV' : applies to only your favorite modules, set in /suse/jdsn/.y2m
+    'FAV' : applies to only your favorite modules, set in ~/.y2m
     <lowercase string> : applies to the named modules
 
 Reserved Branch and Tag Name Prefixes
