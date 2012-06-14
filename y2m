@@ -178,7 +178,7 @@ do
   case $ORG in
     yast) MODDIRNAME=${M#yast-}
         ;;
-    libyui) MODDIRNAME=${M#libyui-}
+    libyui) MODDIRNAME=${M}
         ;;
     *)  echo "Error: the organization '$ORG' is not supported."
         echo "Please prefix the module names correctly  (yast-*, libyui-*)."
