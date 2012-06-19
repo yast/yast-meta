@@ -17,7 +17,7 @@ do
   }
 EOJSON
 
-  curl -s -u ${username}:${password} -X POST -d @${json}  https://api.github.com/repos/${organization}/${repo}/hooks -o ${json}.result
+  curl -s -n -X POST -d @${json}  https://api.github.com/repos/${organization}/${repo}/hooks -o ${json}.result
 done
 
 
