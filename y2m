@@ -15,7 +15,9 @@ function get_repos
 {
   for orgname in "$@";
   do
-    curl -s https://api.github.com/orgs/$orgname/repos | grep "\"name\":" | sed -e "s/^.*name\": \"\(.*\)\",.*$/\1/"
+    for page in 1 2 3 4 5 ; do # workaround for github's silly pagination
+       curl -s "https://api.github.com/orgs/${orgname}/repos?page=${page}&per_page=100" | grep "\"name\":" | sed -e "s/^.*name\": \"\(.*\)\",.*$/\1/"
+    done
   done
 }
 
@@ -179,6 +181,11 @@ do
     yast) MODDIRNAME=${M#yast-}
         ;;
     libyui) MODDIRNAME=${M}
+        ;;
+    ruby)  # workaround for ruby-ui module which is not prefixed correctly
+        echo "Warning: Ignoring '$M'. The organization '$ORG' is not supported."
+        echo "Please prefix the module names correctly  (yast-*, libyui-*)."
+        break;
         ;;
     *)  echo "Error: the organization '$ORG' is not supported."
         echo "Please prefix the module names correctly  (yast-*, libyui-*)."
