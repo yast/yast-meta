@@ -7,26 +7,49 @@
 # License: GPL2
 # Homepage: http://github.com/yast/yast-meta.git
 
+# Enable 'set -x' to get debug output (commands and arguments as they are executed):
+#set -x
+
+# Make sure to have a clean environment:
+PATH="/sbin:/usr/sbin:/usr/bin:/bin"
+LC_ALL="POSIX"
+LANG="POSIX"
+umask 022
+
+# The return value of a pipeline is the status of
+# the last command to exit with a non-zero status,
+# or zero if no command exited with a non-zero status:
+set -o pipefail
+
+MY_NAME=${0##*/}
+
 Y2MCONF=~/.y2m
 
-GITHUBBASEURL=git@github.com
+# At https://github.com/yast see a repository
+# e.g. https://github.com/yast/yast-yast2 which shows those URLs:
+# For "SSH": git@github.com:yast/yast-yast2.git
+# For "Git Read-Only": git://github.com/yast/yast-yast2.git
+GITHUBBASEURL_SSH=git@github.com
+GITHUBBASEURL_GitReadOnly=git://github.com
 
-function get_repos
+get_repos()
 {
-  for orgname in "$@";
-  do
-     # JR if yast oraganization ever have more then 10000 entries I promise to update this number :)
-     curl -s "https://api.github.com/orgs/${orgname}/repos?per_page=10000" | grep "\"name\":" | sed -e "s/^.*name\": \"\(.*\)\",.*$/\1/"
+  for orgname in "$@"
+  do for page in 1 2 3 4 5
+     do # workaround for github's silly pagination
+        curl -s "https://api.github.com/orgs/${orgname}/repos?page=${page}&per_page=100" | grep "\"name\":" | sed -e "s/^.*name\": \"\(.*\)\",.*$/\1/"
+     done
   done
 }
 
-function list_repos
+list_repos()
 {
-    get_repos $@ |  sed -n -e ":a" -e "$ s/\n/,/gp;N;b a" | sed -e 's/"//g' -e 's/,/ /g'
+  get_repos $@ |  sed -n -e ":a" -e "$ s/\n/,/gp;N;b a" | sed -e 's/"//g' -e 's/,/ /g'
 }
 
-function usage()
+usage()
 {
+  echo
   echo "Y2M - the YaST2 meta tool"
   echo
   echo "This is a simple tool to help you to checkout all YaST modules, while"
@@ -41,10 +64,12 @@ function usage()
   echo "Note: There is no need to use this tool."
   echo "      You can do everything manually as well."
   echo
-  echo "Usage: $0 <command> [<modules>,..]"
+  echo "Usage: $MY_NAME <command> [<modules>,..]"
   echo
   echo "commands"
-  echo "    clone        : run git clone for <modules>"
+  echo "    li|list      : list modules in 'yast' and 'libyui' repos"
+  echo "    cl|clone     : run git clone for <modules>"
+  echo "    ro|read-only : run git clone in read-only mode for <modules>"
   echo "    up|pull      : run git pull for a <modules>"
   echo "    co|br <name> : run git checkout to switch to branch <name> for <modules>"
   echo "modules"
@@ -66,7 +91,7 @@ function usage()
   exit ${1:-1}
 }
 
-function createconfig()
+createconfig()
 {
   if [ -z "$1" ]
   then
@@ -112,14 +137,16 @@ function missingconf()
   createconfig $Y2MBASE
 }
 
-
-[ -z $1 ] && usage 0
+[ -z "$1" -o "help" = "$1" ] && usage 0
 
 #TODO: cache the module name information somewhere and just update them e.g. once a week or on request
 #      this would speed up the script run a lot as it would save two curl https requests
-YMODULESALL=`list_repos yast`
-LMODULESALL=`list_repos libyui`
-
+echo
+echo "Getting repos for 'yast'..."
+YMODULESALL="$( list_repos yast )"
+echo "Getting repos for 'libyui'..."
+LMODULESALL="$( list_repos libyui )"
+echo "...got repos"
 
 CMD=$1
 shift
@@ -130,30 +157,30 @@ shift
 . $Y2MCONF
 
 case $CMD in
-  cl|clone) CMD=cl
-     ;;
-  up|pull)  CMD=up
-     ;;
+  li|list) echo "Modules in 'yast' repo:"
+           echo "$YMODULESALL" | fold -s -w 78
+           echo "Modules in 'libyui' repo:"
+           echo "$LMODULESALL" | fold -s -w 78
+           exit 0;;
+  cl|clone) CMD=cl;;
+  ro|read-only) CMD=ro;;
+  up|pull)  CMD=up;;
   br|co) CMD=co
          YBRANCH=$1
-         shift
-     ;;
-  help)  usage 0
-     ;;
-  *)     echo "Error: unknown command: $CMD"
+         shift;;
+  *)     echo "Error: Unknown command: $CMD"
          echo "Run '$0 help' for more information."
-         exit 1
-     ;;
+         exit 1;;
 esac
 
 MODULE=$1
 MODULESALL=$@
 shift
 
-MODULESACTIVE=
+MODULESACTIVE=""
 case $MODULE in
   ALL)
-       if [ $CMD = 'cl' ]
+       if [ $CMD = 'cl' -o $CMD = 'ro' ]
        then
          # ALL for cloning means: all remote repos
          MODULESACTIVE="$YMODULESALL $LMODULESALL"
@@ -171,68 +198,74 @@ case $MODULE in
        ;;
 esac
 
-pushd $Y2MBASE >/dev/null
+if test -n "$MODULESACTIVE"
+then echo "Running '$MY_NAME $CMD' for those modules:"
+     echo "$MODULESACTIVE" | fold -s -w 78
+else echo "Error: No modules found."
+     echo "Run '$0 help' for more information."
+     exit 1
+fi
+
+test -d "$Y2MBASE" && pushd $Y2MBASE &>/dev/null
 
 for M in $MODULESACTIVE
 do
-  #HARDCODED exceptions that don't match schema
-  if [ ${M} = "y2r" ]; then
-    ORG=yast
-  else
-    if [ ${M} = "ruby-ui" ]; then
-      ORG=libyui
-    else
-      ORG=${M%%-*}
-    fi
+  ORG=""
+  MODDIRNAME=""
+  if echo "$YMODULESALL" | grep -q "$M" 
+  then ORG="yast"
+       MODDIRNAME=${M#yast-}
+  else if echo "$LMODULESALL" | grep -q "$M"
+       then ORG="libyui"
+            MODDIRNAME=${M#libyui-}
+       else echo "Error: Skipping unknown module '$M'."
+            echo "Module '$M' neither found in 'yast' repos nor in 'libyui' repos."
+            continue
+       fi
   fi
-  case $ORG in
-    yast) MODDIRNAME=${M#yast-}
-        ;;
-    libyui) MODDIRNAME=${M}
-        ;;
-    ruby)  # workaround for ruby-ui module which is not prefixed correctly
-        echo "Warning: Ignoring '$M'. The organization '$ORG' is not supported."
-        echo "Please prefix the module names correctly  (yast-*, libyui-*)."
-        break;
-        ;;
-    *)  echo "Error: the organization '$ORG' is not supported."
-        echo "Please prefix the module names correctly  (yast-*, libyui-*)."
-        exit 1
-        ;;
-  esac
-
-  #TODO: also support the common plain module names without the prefixes "yast-" and "libyui-"
-  #      lookup the passed module names in the two lists and set the variables accordingly
-  #      it would make the script more comfortable to use
-
-  if [ -z "$MODDIRNAME" ]
-  then
-    echo "Error: could not parse the module name '$M'."
-    echo "Please prefix the module names correctly (yast-*, libyui-*)."
-  fi
-
   case $CMD in
-    cl) if [ -d $MODDIRNAME ]
-        then
-          echo "Repo already cloned: $MODDIRNAME"
-          continue
+    cl) if test -d $MODDIRNAME
+        then echo "Repo already cloned: $MODDIRNAME"
+             continue
         fi
         # pass directory name to clone command to maintain the original svn directory structure
-        git clone ${GITHUBBASEURL}:${ORG}/${M} $MODDIRNAME
+        echo
+        echo "Cloning ${GITHUBBASEURL_SSH}:${ORG}/${M}..."
+        git clone ${GITHUBBASEURL_SSH}:${ORG}/${M} $MODDIRNAME
+        echo "...cloned $M in directory $MODDIRNAME"
     ;;
-    up) pushd $MODDIRNAME >/dev/null
+    ro) if test -d $MODDIRNAME
+        then echo "Repo already exists: $MODDIRNAME"
+             continue
+        fi
+        # pass directory name to clone command to maintain the original svn directory structure
+        echo
+        echo "Read-only cloning ${GITHUBBASEURL_SSH}:${ORG}/${M}..."
+        git clone ${GITHUBBASEURL_GitReadOnly}/${ORG}/${M} $MODDIRNAME
+        echo "...cloned $M in directory $MODDIRNAME"
+    ;;
+    up) if ! test -d $MODDIRNAME
+        then echo "Repo does not exist: $MODDIRNAME"
+             continue
+        fi
+        pushd $MODDIRNAME >/dev/null
         git pull
         popd >/dev/null
     ;;
-    co) pushd $MODDIRNAME >/dev/null
+    co) if ! test -d $MODDIRNAME
+        then echo "Repo does not exist: $MODDIRNAME"
+             continue
+        fi
+        pushd $MODDIRNAME >/dev/null
         git checkout $YBRANCH
         popd >/dev/null
     ;;
-    *)  echo "Unknown error. Please contact the author of this script."
-        popd >/dev/null
+    *)  echo "Abort: No code for command '$CMD'. Please contact the author of this script."
+        test -d "$Y2MBASE" && popd &>/dev/null
         exit 1
     ;;
   esac
 done
 
-popd >/dev/null
+test -d "$Y2MBASE" && popd &>/dev/null
+
