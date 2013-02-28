@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# requirements:
+#
+# package: osc-plugin-overview 
+# 
+#
+# .osc-overview/yast.ini
+#[yast]
+#repos=obs://YaST:Head,obs://openSUSE:Factory
+#packages=*1
+#filter.older=obs://openSUSE:Factory
+#ignore_list=( yast2-printer yast2-wagon )
+#
+# .osc-overview/libyui.ini
+#[libyui]
+#repos=obs://devel:libraries:libyui,obs://openSUSE:Factory
+#packages=*1
+#filter.older=obs://openSUSE:Factory
+
+
+changed_yast_packages=`osc overview yast | grep  ^\| | grep -v "|  "  | grep -v " - " | cut -f2 -d" "`
+changed_libyui_packages=`osc overview libyui | grep  ^\| | grep -v "|  "  | grep -v " - " | cut -f2 -d" "`
+
+function submit()
+{
+    prj=$1
+    pack=$2
+    echo osc sr ${prj} ${pack} openSUSE:Factory -m "submit changed packages from ${prj} to openSUSE:Factory"
+}
+
+function ignorePackage()
+{
+    if [ -z "$1" ]; then
+        return
+    fi
+
+    for i in ${ignore_list[@]}
+    do
+        if [ $i == $1 ]; then
+            return 0
+       fi
+    done
+
+    return 1
+}
+
+prj=YaST:Head
+for package in ${changed_yast_packages}
+do
+    ignorePackage ${package} || submit ${prj} ${package} 
+done
+
+prj=devel:libraries:libyui
+for package in ${changed_libyui_packages}
+do
+    ignorePackage ${package} || submit ${prj} ${package} 
+done
+
