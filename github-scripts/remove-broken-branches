@@ -1,9 +1,19 @@
 #! /bin/bash
-# original code by locilka from
-# http://lists.opensuse.org/yast-devel/2012-09/msg00000.html
-for BRANCH in `git branch -a \
-               | grep "\/origin\/broken" \
-               | sed 's/.*origin\/broken/:broken/'`; do
-  echo $BRANCH
-  git push origin $BRANCH
-done
+# Remove all "broken/*" branches from a remote github repo
+#
+# TODO also remove the TAGS broken/svn/*
+set -e
+set -u
+USER_SLASH_REPO=${1?\$1 should be USER/REPO eg. yast/yast-network}
+REPO=${USER_SLASH_REPO#*/}
+if ! git remote -v | grep /$REPO\\.git; then
+    echo "Error: must be in a working copy of $REPO."
+    exit 1
+fi
+git remote add killbroken git@github.com:$USER_SLASH_REPO.git
+git fetch killbroken
+# ":broken/foo :broken/bar"
+REFSPECS=$(git branch -r | sed -n '/killbroken\/broken/{s,killbroken/,:,;p}')
+git push killbroken $REFSPECS
+git remote rm killbroken
+git fetch --all --prune
