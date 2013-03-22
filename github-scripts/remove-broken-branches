@@ -1,0 +1,9 @@
+#! /bin/bash
+# original code by locilka from
+# http://lists.opensuse.org/yast-devel/2012-09/msg00000.html
+for BRANCH in `git branch -a \
+               | grep "\/origin\/broken" \
+               | sed 's/.*origin\/broken/:broken/'`; do
+  echo $BRANCH
+  git push origin $BRANCH
+done
