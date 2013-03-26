@@ -10,10 +10,12 @@ if ! git remote -v | grep /$REPO\\.git; then
     echo "Error: must be in a working copy of $REPO."
     exit 1
 fi
-git remote add killbroken git@github.com:$USER_SLASH_REPO.git
-git fetch killbroken
+PREFIX=broken
+REMOTE=killbroken
+git remote add $REMOTE git@github.com:$USER_SLASH_REPO.git
+git fetch $REMOTE
 # ":broken/foo :broken/bar"
-REFSPECS=$(git branch -r | sed -n '/killbroken\/broken/{s,killbroken/,:,;p}')
-git push killbroken $REFSPECS
-git remote rm killbroken
+REFSPECS=$(git branch -r | sed -n "/$REMOTE\\/$PREFIX/{s,$REMOTE/,:,;p}")
+git push $REMOTE $REFSPECS
+git remote rm $REMOTE
 git fetch --all --prune
