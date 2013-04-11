@@ -15,8 +15,9 @@ function get_repos
 {
   for orgname in "$@";
   do
-     # JR if yast oraganization ever have more then 10000 entries I promise to update this number :)
-     curl -s "https://api.github.com/orgs/${orgname}/repos?per_page=10000" | grep "\"name\":" | sed -e "s/^.*name\": \"\(.*\)\",.*$/\1/"
+    for page in 1 2 3 4 5 ; do # workaround for github's silly pagination, max. is 100 per page
+       curl -s "https://api.github.com/orgs/${orgname}/repos?page=${page}&per_page=100" | grep "\"name\":" | sed -e "s/^.*name\": \"\(.*\)\",.*$/\1/"
+    done
   done
 }
 
