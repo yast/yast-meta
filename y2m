@@ -177,15 +177,17 @@ pushd $Y2MBASE >/dev/null
 for M in $MODULESACTIVE
 do
   #HARDCODED exceptions that don't match schema
-  if [ ${M} = "y2r" ]; then
-    ORG=yast
-  else
-    if [ ${M} = "ruby-ui" ]; then
-      ORG=libyui
-    else
-      ORG=${M%%-*}
-    fi
-  fi
+  case ${M} in
+    y2r) ORG=yast
+      ;;
+    ruby-ui) ORG=libyui
+      ;;
+    ycp-killer) ORG=yast
+      ;;
+    *) ORG=${M%%-*}
+      ;;
+  esac
+
   case $ORG in
     yast) MODDIRNAME=${M#yast-}
         ;;
