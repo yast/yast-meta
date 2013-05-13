@@ -193,10 +193,11 @@ do
         ;;
     libyui) MODDIRNAME=${M}
         ;;
-    ruby)  # workaround for ruby-ui module which is not prefixed correctly
-        echo "Warning: Ignoring '$M'. The organization '$ORG' is not supported."
-        echo "Please prefix the module names correctly  (yast-*, libyui-*)."
-        break;
+    y2r) MODDIRNAME=${M}
+        ORG="yast"
+	;;
+    ruby) MODDIRNAME=${M}
+	ORG="libyui"
         ;;
     *)  echo "Error: the organization '$ORG' is not supported."
         echo "Please prefix the module names correctly  (yast-*, libyui-*)."
