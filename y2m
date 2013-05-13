@@ -39,7 +39,6 @@ get_repos()
      do # workaround for github's silly pagination
         curl -s "https://api.github.com/orgs/${orgname}/repos?page=${page}&per_page=100" | grep "\"name\":" | sed -e "s/^.*name\": \"\(.*\)\",.*$/\1/"
      done
->>>>>>> df4ed44a8a90b4e03e25bcefafc3b23c1f2d540b
   done
 }
 
