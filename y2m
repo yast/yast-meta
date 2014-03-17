@@ -212,11 +212,9 @@ for M in $MODULESACTIVE
 do
   #HARDCODED exceptions that don't match schema
   case ${M} in
-    y2r) ORG=yast
+    y2r|ycp-killer|rubygem) ORG=yast
       ;;
     ruby-ui) ORG=libyui
-      ;;
-    ycp-killer) ORG=yast
       ;;
     *) ORG=${M%%-*}
       ;;
@@ -227,11 +225,11 @@ do
         ;;
     libyui) MODDIRNAME=${M}
         ;;
-    y2r) MODDIRNAME=${M}
+    y2r|skelcd|rubygem) MODDIRNAME=${M}
         ORG="yast"
-	;;
+        ;;
     ruby) MODDIRNAME=${M}
-	ORG="libyui"
+        ORG="libyui"
         ;;
     *)  echo "Error: the organization '$ORG' is not supported."
         echo "Please prefix the module names correctly  (yast-*, libyui-*)."
