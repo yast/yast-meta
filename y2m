@@ -32,6 +32,14 @@ Y2MCONF=~/.y2m
 GITHUBBASEURL_SSH=git@github.com
 GITHUBBASEURL_GitReadOnly=git://github.com
 
+do_clone() # {{{
+{
+  local remote=${1?} mod=${1##*/} moddir=${2?}
+  echo "Cloning $remote..."
+  git clone $remote $moddir
+  echo "...cloned $mod in directory $moddir"
+} # }}}
+
 get_repos()
 {
   for orgname in "$@"
@@ -251,21 +259,15 @@ do
         then echo "Repo already cloned: $MODDIRNAME"
              continue
         fi
-        # pass directory name to clone command to maintain the original svn directory structure
         echo
-        echo "Cloning ${GITHUBBASEURL_SSH}:${ORG}/${M}..."
-        git clone ${GITHUBBASEURL_SSH}:${ORG}/${M} $MODDIRNAME
-        echo "...cloned $M in directory $MODDIRNAME"
+        do_clone "$GITHUBBASEURL_SSH:$ORG/$M" $MODDIRNAME
     ;;
     ro) if test -d $MODDIRNAME
         then echo "Repo already exists: $MODDIRNAME"
              continue
         fi
-        # pass directory name to clone command to maintain the original svn directory structure
         echo
-        echo "Read-only cloning ${GITHUBBASEURL_SSH}:${ORG}/${M}..."
-        git clone ${GITHUBBASEURL_GitReadOnly}/${ORG}/${M} $MODDIRNAME
-        echo "...cloned $M in directory $MODDIRNAME"
+        do_clone "$GITHUBBASEURL_GitReadOnly:$ORG/$M" $MODDIRNAME
     ;;
     up) if ! test -d $MODDIRNAME
         then echo "Repo does not exist: $MODDIRNAME"
