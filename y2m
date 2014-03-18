@@ -53,7 +53,7 @@ get_repos()
 
 list_repos()
 {
-  get_repos $@ |  sed -n -e ":a" -e "$ s/\n/,/gp;N;b a" | sed -e 's/"//g' -e 's/,/ /g'
+  get_repos $@ |  sed -n -e ":a" -e "$ s/\n/ /gp;N;b a"
 }
 
 usage()
