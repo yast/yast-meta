@@ -51,11 +51,6 @@ get_repos()
   done
 }
 
-list_repos()
-{
-  get_repos $@ |  sed -n -e ":a" -e "$ s/\n/ /gp;N;b a"
-}
-
 usage()
 {
   echo
@@ -152,9 +147,9 @@ function missingconf()
 #      this would speed up the script run a lot as it would save two curl https requests
 echo
 echo "Getting repos for 'yast'..."
-YMODULESALL="$( list_repos yast )"
+YMODULESALL=$(get_repos yast)
 echo "Getting repos for 'libyui'..."
-LMODULESALL="$( list_repos libyui )"
+LMODULESALL=$(get_repos libyui)
 echo "...got repos"
 
 CMD=$1
@@ -167,9 +162,9 @@ shift
 
 case $CMD in
   li|list) echo "Modules in 'yast' repo:"
-           echo "$YMODULESALL" | fold -s -w 78
+           echo $YMODULESALL | fold -s -w 78
            echo "Modules in 'libyui' repo:"
-           echo "$LMODULESALL" | fold -s -w 78
+           echo $LMODULESALL | fold -s -w 78
            exit 0;;
   cl|clone) CMD=cl;;
   ro|read-only) CMD=ro;;
@@ -209,7 +204,7 @@ esac
 
 if test -n "$MODULESACTIVE"
 then echo "Running '$MY_NAME $CMD' for those modules:"
-     echo "$MODULESACTIVE" | fold -s -w 78
+     echo $MODULESACTIVE | fold -s -w 78
 else echo "Error: No modules found."
      echo "Run '$0 help' for more information."
      exit 1
