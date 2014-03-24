@@ -40,16 +40,80 @@ do_clone() # {{{
   echo "...cloned $mod in directory $moddir"
 } # }}}
 
-get_repos()
+get_repos() # {{{
 {
-  for orgname in "$@"
-  do for page in 1 2 3 4 5
-     do # workaround for github's silly pagination
-        curl -s "https://api.github.com/orgs/${orgname}/repos?page=${page}&per_page=100" \
-        | sed -n '/"name":/s/^.*"name": "\(.*\)",.*$/\1/p'
-     done
+  local org=${1?}
+  local rv=0 pg=1
+
+  local cachedir=~/.y2mcache
+
+  mkdir -p $cachedir || {
+    echo "$MY_NAME: mkdir -p $cachedir failed"
+    exit 1
+  } >&2
+
+  while (( 0 == rv )); do
+    get_repos_page $cachedir $org $pg
+    rv=$?
+    pg=$((pg + 1))
   done
-}
+  if (( 2 < rv )); then
+    echo "error listing repositories in github"
+    exit 1
+  fi >&2
+  if (( 1 == rv )); then
+    while test -f $cachedir/$org.$pg.curldump; do
+      rm $cachedir/$org.$pg.*
+      pg=$((pg + 1))
+    done
+    sort $cachedir/$org.*.repos > $cachedir/$org.repos
+  fi
+  cat $cachedir/$org.repos
+} # }}}
+
+get_repos_page() # {{{
+{
+  local cachedir=${1?}
+  local org=${2?}
+  local pg=${3?}
+  local pglen=100
+
+  local headersfile=$cachedir/$org.$pg.headers
+  local responsefile=$cachedir/$org.$pg.output
+  local reposfile=$cachedir/$org.$pg.repos
+  local curldump=$cachedir/$org.$pg.curldump
+
+  local url="https://api.github.com/orgs/${org}/repos?page=${pg}&per_page=${pglen}"
+
+  local etag=$(
+    test -f $headersfile \
+    && sed -n 's/^ETag: \("[^"]*"\).*/\1/p' $headersfile
+  )
+
+  curl --silent --verbose --show-error \
+    --dump-header $headersfile \
+    --output $responsefile \
+    ${etag:+--header 'If-None-Match: '$etag} \
+    --url $url 2> $curldump
+  local rv=$?
+  if (( 0 != rv )); then
+    (( 2 >= rv )) && ((rv += 10))
+    return $rv
+  fi
+  local status=$(head -1 $headersfile)
+  case "$status" in
+  (HTTP/*\ 200\ *) ;;
+  (HTTP/*\ 304\ *) return 2 ;;
+  (*) return 22 ;;
+  esac
+  sed -n -e '/"name":/s/^.*"name": "\([^"]*\)",.*$/\1/p' $responsefile \
+  | sort \
+  > $reposfile.tmp
+  local rcnt=$(wc -l < $reposfile.tmp)
+  mv $reposfile.tmp $reposfile
+  (( rcnt == pglen )) || return 1
+} # }}}
+
 
 usage()
 {
