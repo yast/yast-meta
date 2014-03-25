@@ -29,8 +29,10 @@ Y2MCONF=~/.y2m
 # e.g. https://github.com/yast/yast-yast2 which shows those URLs:
 # For "SSH": git@github.com:yast/yast-yast2.git
 # For "Git Read-Only": git://github.com/yast/yast-yast2.git
-GITHUBBASEURL_SSH=git@github.com
-GITHUBBASEURL_GitReadOnly=git://github.com
+declare -Ar urls=(
+  [cl]=git@github.com
+  [ro]=git://github.com
+)
 
 do_clone() # {{{
 {
@@ -338,15 +340,10 @@ do
     echo "Please prefix the module names correctly (yast-*, libyui-*)."
   fi
   case $CMD in
-    cl)
+    cl|ro)
         have_copy -n $MODDIRNAME || continue
         echo
-        do_clone "$GITHUBBASEURL_SSH:$ORG/$M" $MODDIRNAME
-    ;;
-    ro)
-        have_copy -n $MODDIRNAME || continue
-        echo
-        do_clone "$GITHUBBASEURL_GitReadOnly:$ORG/$M" $MODDIRNAME
+        do_clone "${urls[$CMD]}:$ORG/$M" $MODDIRNAME
     ;;
     up)
         have_copy -y $MODDIRNAME || continue
