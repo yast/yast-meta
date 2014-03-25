@@ -114,6 +114,29 @@ get_repos_page() # {{{
   (( rcnt == pglen )) || return 1
 } # }}}
 
+have_copy() # {{{
+{
+  local wanted=${1?} m=${2?}
+  case "$wanted" in
+  -y|--yes)
+    test -d "$m" || {
+      echo "Repo does not exist: $m"
+      return 1
+    }
+  ;;
+  -n|--no)
+    test -d "$m" && {
+      echo "Repo already cloned: $m"
+      return 1
+    }
+  ;;
+  *)
+    echo "$MY_NAME: internal error; have_copy called with $@."
+    exit 1
+  ;;
+  esac
+  return 0
+} >&2 # }}}
 
 usage()
 {
@@ -315,32 +338,24 @@ do
     echo "Please prefix the module names correctly (yast-*, libyui-*)."
   fi
   case $CMD in
-    cl) if test -d $MODDIRNAME
-        then echo "Repo already cloned: $MODDIRNAME"
-             continue
-        fi
+    cl)
+        have_copy -n $MODDIRNAME || continue
         echo
         do_clone "$GITHUBBASEURL_SSH:$ORG/$M" $MODDIRNAME
     ;;
-    ro) if test -d $MODDIRNAME
-        then echo "Repo already exists: $MODDIRNAME"
-             continue
-        fi
+    ro)
+        have_copy -n $MODDIRNAME || continue
         echo
         do_clone "$GITHUBBASEURL_GitReadOnly:$ORG/$M" $MODDIRNAME
     ;;
-    up) if ! test -d $MODDIRNAME
-        then echo "Repo does not exist: $MODDIRNAME"
-             continue
-        fi
+    up)
+        have_copy -y $MODDIRNAME || continue
         pushd $MODDIRNAME >/dev/null
         git pull
         popd >/dev/null
     ;;
-    co) if ! test -d $MODDIRNAME
-        then echo "Repo does not exist: $MODDIRNAME"
-             continue
-        fi
+    co)
+        have_copy -y $MODDIRNAME || continue
         pushd $MODDIRNAME >/dev/null
         git checkout $YBRANCH
         popd >/dev/null
