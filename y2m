@@ -238,12 +238,6 @@ have_copy() # {{{
   return 0
 } >&2 # }}}
 
-usage() # {{{
-{
-  print_section HELP | ${PAGER:-less}
-  exit ${1:-1}
-} # }}}
-
 createconfig() # {{{
 {
   print_section Y2MCONF > ${1:?}
@@ -262,12 +256,10 @@ print_section() # {{{
 EOSED
 } # }}}
 
-[ -z "$1" -o "help" = "$1" ] && usage 0
-
-[ -f $Y2MCONF ] || createconfig $Y2MCONF
-# overwrite variables that are set in the config
-[ -f $Y2MCONF ] && . $Y2MCONF
-
+y2m-help() # {{{
+{
+  print_section HELP | ${PAGER:-less}
+} # }}}
 y2m-list() # {{{
 {
   fetch_repos
@@ -282,7 +274,7 @@ y2m-list() # {{{
 y2m-clone() # {{{
 {
   [[ $# -eq 0 ]] && {
-    echo "usage: $MY_NAME $CMD (ALL|FAV|<module>...)"
+    echo "usage: $MY_NAME $CMD ALL | FAV | <module>..."
     exit 1
   } >&2
 
@@ -348,10 +340,20 @@ y2m-checkout() # {{{
   done
 } # }}}
 
+[[ $# -eq 0 ]] && {
+  y2m-help
+  exit 1
+}
+
+[ -f $Y2MCONF ] || createconfig $Y2MCONF
+# overwrite variables that are set in the config
+[ -f $Y2MCONF ] && . $Y2MCONF
+
 CMD=$1
 shift
 
 case $CMD in
+help)                     y2m-help        "$@" ;;
 li|list)                  y2m-list        "$@" ;;
 cl|clone|ro|read-only)    y2m-clone       "$@" ;;
 up|pull)                  y2m-pull        "$@" ;;
