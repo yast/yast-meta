@@ -186,18 +186,6 @@ usage()
 
 createconfig()
 {
-  if [ -z "$1" ]
-  then
-    echo "Error: No path name given. Please enter a path name."
-    exit 1
-  fi
-
-  if ! mkdir -p "$1"
-  then
-    echo "Error: Could not create the base directory: $1"
-    exit 1
-  fi
-
   cat > $Y2MCONF <<EOYCONF
 #
 # .y2m config file
@@ -206,28 +194,11 @@ createconfig()
 #
 
 #
-# Base path where all the checkouts of all modules will be located
-# while maintaining the directory structure of the former svn.
-Y2MBASE="$1"
-
-#
 # Your favorite modules (you either are the maintainer or just want to regularly track them)
 # List of space separated module names including their new prefix:
 #  e.g. "yast-core yast-network yast-installation libyui-qt"
 Y2MFAVORITES=""
 EOYCONF
-}
-
-function missingconf()
-{
-  echo "No config for y2m exists."
-  echo "In the $Y2MCONF file things like the base checkout directory need to be set."
-  echo "I will now create a config. Press Ctrl-C to abort."
-  echo
-  echo "Within the base path all YaST modules will be checked out, while maintaining"
-  echo "the same directory structure of the former svn repo."
-  read -p "Please enter base path: " Y2MBASE
-  createconfig $Y2MBASE
 }
 
 [ -z "$1" -o "help" = "$1" ] && usage 0
@@ -244,10 +215,9 @@ echo "...got repos"
 CMD=$1
 shift
 
-[ ! -f $Y2MCONF ] && missingconf
-[ ! -f $Y2MCONF ] && exit 1
+[ -f $Y2MCONF ] || createconfig
 # overwrite variables that are set in the config
-. $Y2MCONF
+[ -f $Y2MCONF ] && . $Y2MCONF
 
 case $CMD in
   li|list) echo "Modules in 'yast' repo:"
@@ -279,7 +249,7 @@ case $MODULE in
          MODULESACTIVE="$YMODULESALL $LMODULESALL"
        else
          # ALL for the other commands means: all local repos
-         MODULESACTIVE=`ls $Y2MBASE/ | sed -e "s/^/yast-/"`
+         MODULESACTIVE=`ls | sed -e "s/^/yast-/"`
          #FIXME: all names are mapped to yast-
          #TODO:  use the dynamically fetched repo lists to automatically map them correctly
        fi
@@ -299,7 +269,6 @@ else echo "Error: No modules found."
      exit 1
 fi
 
-test -d "$Y2MBASE" && pushd $Y2MBASE &>/dev/null
 
 for M in $MODULESACTIVE
 do
@@ -358,11 +327,9 @@ do
         popd >/dev/null
     ;;
     *)  echo "Abort: No code for command '$CMD'. Please contact the author of this script."
-        test -d "$Y2MBASE" && popd &>/dev/null
         exit 1
     ;;
   esac
 done
 
-test -d "$Y2MBASE" && popd &>/dev/null
 
