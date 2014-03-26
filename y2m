@@ -7,41 +7,83 @@
 # Homepage: http://github.com/yast/yast-meta.git
 
 ### HELP START # {{{
-# Y2M - the YaST2 meta tool
+# NAME
+#     $0 - git wrapper tuned for YaST development
 #
-# This is a simple tool to help you to checkout all YaST modules, while
-# maintaining the directory structure of the former svn repo.
+# SYNOPSIS
+#     $0 list
+#     $0 clone ALL | FAV | <module>...
+#     $0 read-only ALL | FAV | <module>...
+#     $0 pull [ALL | FAV | <module>...]
+#     $0 checkout [ALL | FAV | <module>...]
 #
-# With this tool you can
-#  * checkout all or just your favorite modules
-#  * switch all (or favorite) modules to a specific branch
-#  * run git pull on all (or favorite) modules
-# with just one command.
+# DESCRIPTION
+#     $0 (short for "YaST: too many") eases work with (arbitrary
+#     subsets of) all YaST module git repositories while maintaining
+#     the directory structure of the former svn repo.
+#     That is, flat directory, with the "yast-" prefix stripped
+#     from directory names.
 #
-# Note: This tool is not *necessary* for YaST development.
-#       It's only a convenience.
+# COMMANDS
+#   list, ls
+#     $0 list
 #
-# Usage: $0 <command> [<modules>,..]
+#     List names of all repositories in both github organizations
+#     (yast, libyi).
 #
-# commands
-#     li|list      : list modules in 'yast' and 'libyui' repos
-#     cl|clone     : run git clone for <modules>
-#     ro|read-only : run git clone in read-only mode for <modules>
-#     up|pull      : run git pull for a <modules>
-#     co|br <name> : run git checkout to switch to branch <name> for <modules>
-# modules
-#     'ALL' : applies to all current known yast modules
-#     'FAV' : applies to only your favorite modules, set in $Y2MCONF
-#     <lowercase string> : applies to the named modules
+#   clone, cl
+#   read-only, ro
+#     $0 clone ALL | FAV | <module>...
+#     $0 read-only ALL | FAV | <module>...
 #
-# Reserved Branch and Tag Name Prefixes
+#     Clone given modules from github.com/{yast,libyui}/.
+#     `clone` uses SSH, `read-only` uses the `git://` scheme.
+#     Repositories whose names start with "yast-" are cloned into
+#     directories without this prefix.
 #
-# These branch- and tag name prefixes are reserved for openSUSE and SLE
-# releases, you should *not* use them for your own branches/tags.
-#  * 'openSUSE-'
-#  * 'SLE-'
-#  * 'Code-'
-# See also: http://en.opensuse.org/YaST_SVN_to_GIT
+#   pull, up
+#     $0 pull ALL | FAV | <module>...
+#
+#     Run `git pull` in each given module.
+#
+#   checkout, co
+#     $0 checkout <branch> ALL | FAV | <module>...
+#
+#     Run `git checkout <branch>` in each given module.
+#
+# MODULE SPECIFICATIONS
+#     ALL      - All modules from both organizations
+#                (yast/, libyui/).
+#     FAV      - Modules named in Y2MFAVORITES.
+#     <module> - Basename of a repository name,
+#                "yast-" prefix is not necessary.
+#
+# FILES
+#   ~/.y2m
+#     Sourced into $0.  May define following parameters:
+#
+#     Y2MFAVORITES
+#       Whitespace-separated list of modules.
+#
+# RESERVED BRANCH AND TAG NAMES
+#   These branch- and tag name prefixes are reserved for openSUSE
+#   and SLE releases, do not use them for your own branches/tags.
+#
+#    - "openSUSE-"
+#    - "SLE-"
+#    - "Code-"
+#
+# SEE ALSO
+#   git(1),
+#   http://github.com/yast,
+#   http://github.com/libyui,
+#   http://en.opensuse.org/YaST_SVN_to_GIT
+#
+# AUTHORS
+#   YaST developers <yast-devel@opensuse.org>.
+#
+# BUGS
+#   Please report them at <https://github.com/yast/yast-meta/issues>.
 ### HELP END # }}}
 
 ### Y2MCONF START {{{
@@ -198,7 +240,7 @@ have_copy() # {{{
 
 usage() # {{{
 {
-  print_section HELP
+  print_section HELP | ${PAGER:-less}
   exit ${1:-1}
 } # }}}
 
