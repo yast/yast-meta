@@ -353,7 +353,7 @@ CMD=$1
 shift
 
 case $CMD in
-help)                     y2m-help        "$@" ;;
+--help|help)              y2m-help        "$@" ;;
 li|list)                  y2m-list        "$@" ;;
 cl|clone|ro|read-only)    y2m-clone       "$@" ;;
 up|pull)                  y2m-pull        "$@" ;;
