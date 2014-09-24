@@ -134,11 +134,11 @@ do_clone() # {{{
   if [ `ls $moddir/* | wc -l` -eq 1 ]; then
     echo "Module dropped. Removing it.";
     rm -rf $moddir
-    exit 0
+    return 0
   fi
   # clean shallow copy
   echo "Unshallowing git repo $moddir..."
-  cd $moddir && git pull --unshallow; cd -
+  cd $moddir && git pull -q --unshallow; cd -
 } # }}}
 
 fetch_repos() # {{{
@@ -295,6 +295,7 @@ y2m-clone() # {{{
 
     for org in libyui yast; do
       while read mod; do
+        echo "Cloning module $mod"
         lmod=${mod#yast-}
         have_copy -n $lmod || continue
         do_clone "$url:$org/$mod" $lmod
