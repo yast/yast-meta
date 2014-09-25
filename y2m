@@ -129,8 +129,16 @@ declare -r cachedir=~/.y2mcache
 do_clone() # {{{
 {
   local remote=${1?} mod=${1##*/} moddir=${2?}
-  echo "Cloning $remote..."
-  git clone -q $remote $moddir
+  echo "Testing clone to detect dead modules for $remote..."
+  git clone --depth=1 -q $remote $moddir
+  if [ `ls $moddir/* | wc -l` -eq 1 ]; then
+    echo "Module dropped. Removing it.";
+    rm -rf $moddir
+    return 0
+  fi
+  # clean shallow copy
+  echo "Unshallowing git repo $moddir..."
+  cd $moddir && { git pull -q --unshallow; cd -; }
 } # }}}
 
 fetch_repos() # {{{
@@ -287,6 +295,7 @@ y2m-clone() # {{{
 
     for org in libyui yast; do
       while read mod; do
+        echo "Cloning module $mod"
         lmod=${mod#yast-}
         have_copy -n $lmod || continue
         do_clone "$url:$org/$mod" $lmod
