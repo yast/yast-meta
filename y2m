@@ -138,7 +138,12 @@ do_clone() # {{{
   fi
   # clean shallow copy
   echo "Unshallowing git repo $moddir..."
-  cd $moddir && { git pull -q --unshallow; cd -; }
+  cd $moddir &&
+    {
+      git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*";
+      git pull -q --unshallow;
+      cd -;
+    }
 } # }}}
 
 fetch_repos() # {{{
