@@ -120,8 +120,8 @@ Y2MCONF=~/.y2m
 # For "SSH": git@github.com:yast/yast-yast2.git
 # For "Git Read-Only": git://github.com/yast/yast-yast2.git
 declare -Ar urls=(
-  [c]=git@github.com
-  [r]=git://github.com
+  [c]=git@github.com:
+  [r]=https://github.com/
 )
 
 declare -r cachedir=~/.y2mcache
@@ -303,7 +303,7 @@ y2m-clone() # {{{
         echo "Cloning module $mod"
         lmod=${mod#yast-}
         have_copy -n $lmod || continue
-        do_clone "$url:$org/$mod" $lmod
+        do_clone "$url$org/$mod" $lmod
       done < $cachedir/$org.repos
     done
 
@@ -318,7 +318,7 @@ y2m-clone() # {{{
       mod=$(grep -Ehwe "$lmod\$" $cachedir/{libyui,yast}.repos)
       lmod=${lmod#yast-}
       have_copy -n $lmod || continue
-      do_clone "$url:$org/$mod" $lmod
+      do_clone "$url$org/$mod" $lmod
     done
 
   fi
