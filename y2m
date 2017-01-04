@@ -29,7 +29,7 @@
 #     $0 list
 #
 #     List names of all repositories in both github organizations
-#     (yast, libyi).
+#     (yast, libyui).
 #
 #   clone, cl
 #   read-only, ro
@@ -369,7 +369,7 @@ shift
 
 case $CMD in
 --help|help)              y2m-help        "$@" ;;
-li|list)                  y2m-list        "$@" ;;
+li|ls|list)               y2m-list        "$@" ;;
 cl|clone|ro|read-only)    y2m-clone       "$@" ;;
 up|pull)                  y2m-pull        "$@" ;;
 br|co|checkout)           y2m-checkout    "$@" ;;
