@@ -38,6 +38,21 @@ modules
     'FAV' : applies to only your favorite modules, set in ~/.y2m
     <lowercase string> : applies to the named modules
 
+## Authentication
+
+The tool will work even without GitHub authentication, *unless* you share
+an IP with the rest of your company, in which case it will fail because of
+rate limiting. To get an 83 times better rate, authenticate:
+
+Generate a new [access token](https://github.com/settings/tokens/new)
+(no scopes are needed), and set up a `.netrc` file:
+
+```sh
+touch     ~/.netrc
+chmod 600 ~/.netrc
+echo   >> ~/.netrc "machine api.github.com login your_username password your_token"
+```
+
 ## Reserved Branch and Tag Name Prefixes
 
 In order to maintain a certain consistency between the modules there are
