@@ -204,6 +204,7 @@ get_repos_page() # {{{
   )
 
   curl --silent --verbose --show-error \
+    --netrc \
     --dump-header $headersfile \
     --output $responsefile \
     ${etag:+--header 'If-None-Match: '$etag} \
