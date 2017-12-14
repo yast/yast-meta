@@ -220,9 +220,7 @@ get_repos_page() # {{{
   (HTTP/*\ 304\ *) return 2 ;;
   (*) return 22 ;;
   esac
-  # find the "name" properties, except in the "license" subobject
-  sed -n -e '/"license": {/,/}/d;/"name":/s/^.*"name": "\([^"]*\)",.*$/\1/p' $responsefile \
-  | sort \
+  ruby -rjson -e 'JSON.load(ARGF).map{|r| r["name"]}.sort.each{|n| puts n}' $responsefile \
   > $reposfile.tmp
   local rcnt=$(wc -l < $reposfile.tmp)
   mv $reposfile.tmp $reposfile
