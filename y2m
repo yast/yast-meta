@@ -220,7 +220,8 @@ get_repos_page() # {{{
   (HTTP/*\ 304\ *) return 2 ;;
   (*) return 22 ;;
   esac
-  sed -n -e '/"name":/s/^.*"name": "\([^"]*\)",.*$/\1/p' $responsefile \
+  # find the "name" properties, except in the "license" subobject
+  sed -n -e '/"license": {/,/}/d;/"name":/s/^.*"name": "\([^"]*\)",.*$/\1/p' $responsefile \
   | sort \
   > $reposfile.tmp
   local rcnt=$(wc -l < $reposfile.tmp)
